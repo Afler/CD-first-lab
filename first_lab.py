@@ -5,8 +5,10 @@ class LinearCode:
     A = np.mat([[]], dtype=int)
     G = np.mat([[]], dtype=int)
     X = np.mat([[]], dtype=int)
+    H = np.mat([[]], dtype=int)
     n = 0
     k = 0
+
     def __init__(self, A):
         m = A.shape[0]
         n = A.shape[1]
@@ -16,10 +18,10 @@ class LinearCode:
                 row = (A[i] + A[j]) % 2
                 isAppend = True
                 for k in range(0, B.shape[0]):
-                    if (np.array_equal(B[k], row)):
+                    if np.array_equal(B[k], row):
                         isAppend = False
                         break
-                if (isAppend):
+                if isAppend:
                     B = np.vstack([B, row])
         B = np.vstack([B, np.zeros(n, dtype=int)])
         self.A = B
@@ -27,22 +29,35 @@ class LinearCode:
         m = self.G.shape[0]
         n = self.G.shape[1]
         for i in range(m):
-            if (np.array_equal(np.ravel(self.G[i]), np.zeros(n, dtype=int))):
+            if np.array_equal(np.ravel(self.G[i]), np.zeros(n, dtype=int)):
                 self.G = self.G[0: i]
                 break
         self.n = self.G.shape[1]
         self.k = self.G.shape[0]
-        self.X = RREF(self.G).copy()
-        delete_columns =[]
+        self.X = RREF(self.G)
+        delete_columns = []
         for i in range(self.X.shape[0]):
             for j in range(self.X.shape[1]):
-                if (self.X[i, j] != 0):
+                if self.X[i, j] != 0:
                     delete_columns.append(j)
                     break
         print(delete_columns)
-        self.X =  np.delete(self.X, delete_columns, 1)
-        I = np.mat(np.eye(self.X.shape[0], self.X.shape[1], dtype=int))
-        print(I)
+        self.X = np.delete(self.X, delete_columns, 1)
+        I = np.mat(np.eye(self.X.shape[1], dtype=int))
+        print("I =\n", I)
+        print("X =\n", self.X)
+        self.H = np.zeros([self.X.shape[0] + I.shape[0], self.X.shape[1]], dtype=int)
+        iter_k = 0
+        iter_j = 0
+        for i in range(self.X.shape[0] + I.shape[0]):
+            if i in delete_columns:
+                self.H[[i]] = self.X[iter_j]
+                iter_j += 1
+            else:
+                self.H[[i]] = I[iter_k]
+                iter_k += 1
+        print("H =\n", self.H)
+
 
 def REF(B):
     A = B.copy()
@@ -80,11 +95,11 @@ if __name__ == '__main__':
                 [0, 0, 1, 1, 1],
                 [1, 1, 1, 0, 1],
                 [1, 1, 0, 0, 1]], dtype=int)
-    print(REF(A))
-    print(RREF(A))
+    # print(REF(A))
+    # print(RREF(A))
     linearcode = LinearCode(A)
-    print(linearcode.A)
-    print(linearcode.G)
-    print(linearcode.n)
-    print(linearcode.k)
-    print(linearcode.X)
+    # print(linearcode.A)
+    print("G =\n", linearcode.G)
+    # print(linearcode.n)
+    # print(linearcode.k)
+    # print(linearcode.X)
