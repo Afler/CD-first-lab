@@ -6,10 +6,20 @@ class LinearCode:
     def __init__(self, A):
         m = A.shape[0]
         n = A.shape[1]
-        B = np.mat([[]], dtype=int)
-        for i in range(m):
-            newrow = [1, 2, 3]
-            B = np.vstack([B, newrow])
+        B = A.copy()
+        for i in range(m - 1):
+            #np.vstack([B, A[i]])
+            for j in range (i + 1, m):
+                row = (A[i] + A[j]) % 2
+                isAppend = True
+                for k in range(0, B.shape[0]):
+                    if (np.array_equal(B[k], row)):
+                        isAppend = False
+                        break
+                if(isAppend):
+                    B = np.vstack([B, row])
+        B = np.vstack([B, np.zeros(n, dtype=int)])
+        self.A = B
 
 def REF(B):
     A = B.copy()
@@ -49,7 +59,7 @@ if __name__ == '__main__':
     print(REF(A))
     print(RREF(A))
     l = LinearCode(A)
-    print(l)
+    print(l.A)
 
 
 
