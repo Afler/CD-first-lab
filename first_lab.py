@@ -41,6 +41,8 @@ class LinearCode:
                     break
         print(delete_columns)
         self.X =  np.delete(self.X, delete_columns, 1)
+        I = np.mat(np.eye(self.X.shape[0], self.X.shape[1], dtype=int))
+        print(I)
 
 def REF(B):
     A = B.copy()
