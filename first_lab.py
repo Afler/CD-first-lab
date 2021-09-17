@@ -3,23 +3,32 @@ import numpy as np
 
 class LinearCode:
     A = np.mat([[]], dtype=int)
+    G = np.mat([[]], dtype=int)
+
     def __init__(self, A):
         m = A.shape[0]
         n = A.shape[1]
         B = A.copy()
         for i in range(m - 1):
-            #np.vstack([B, A[i]])
-            for j in range (i + 1, m):
+            # np.vstack([B, A[i]])
+            for j in range(i + 1, m):
                 row = (A[i] + A[j]) % 2
                 isAppend = True
                 for k in range(0, B.shape[0]):
                     if (np.array_equal(B[k], row)):
                         isAppend = False
                         break
-                if(isAppend):
+                if (isAppend):
                     B = np.vstack([B, row])
         B = np.vstack([B, np.zeros(n, dtype=int)])
         self.A = B
+        self.G = RREF(self.A)
+        m = self.G.shape[0]
+        n = self.G.shape[1]
+        for i in range(m):
+            if (np.array_equal(np.ravel(self.G[i]), np.zeros(n, dtype=int))):
+                self.G = self.G[0: i]
+                break
 
 def REF(B):
     A = B.copy()
@@ -37,6 +46,7 @@ def REF(B):
                     A[k] = (A[k] - A[number_of_leaders] * A[k, j]) % 2
                 number_of_leaders += 1
     return A
+
 
 def RREF(B):
     C = REF(B).copy()
@@ -58,8 +68,6 @@ if __name__ == '__main__':
                 [1, 1, 0, 0, 1]], dtype=int)
     print(REF(A))
     print(RREF(A))
-    l = LinearCode(A)
-    print(l.A)
-
-
-
+    linearcode = LinearCode(A)
+    print(linearcode.A)
+    print(linearcode.G)
