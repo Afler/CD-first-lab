@@ -1,6 +1,16 @@
 import numpy as np
 
 
+class LinearCode:
+    A = np.mat([[]], dtype=int)
+    def __init__(self, A):
+        m = A.shape[0]
+        n = A.shape[1]
+        B = np.mat([[]], dtype=int)
+        for i in range(m):
+            newrow = [1, 2, 3]
+            B = np.vstack([B, newrow])
+
 def REF(B):
     A = B.copy()
     m = A.shape[0]  # rows number
@@ -38,3 +48,8 @@ if __name__ == '__main__':
                 [1, 1, 0, 0, 1]], dtype=int)
     print(REF(A))
     print(RREF(A))
+    l = LinearCode(A)
+    print(l)
+
+
+
