@@ -18,6 +18,12 @@ def REF(B):
                 number_of_leaders += 1
     return A
 
+def RREF(A):
+    C = A.copy
+    m = C.shape[0]
+    n = C.shape[1]
+    return C
+
 
 if __name__ == '__main__':
     A = np.mat([[0, 1, 1],
