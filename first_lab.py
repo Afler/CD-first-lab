@@ -4,7 +4,8 @@ import numpy as np
 class LinearCode:
     A = np.mat([[]], dtype=int)
     G = np.mat([[]], dtype=int)
-
+    n = 0
+    k = 0
     def __init__(self, A):
         m = A.shape[0]
         n = A.shape[1]
@@ -29,6 +30,8 @@ class LinearCode:
             if (np.array_equal(np.ravel(self.G[i]), np.zeros(n, dtype=int))):
                 self.G = self.G[0: i]
                 break
+        self.n = self.G.shape[1]
+        self.k = self.G.shape[0]
 
 def REF(B):
     A = B.copy()
@@ -71,3 +74,5 @@ if __name__ == '__main__':
     linearcode = LinearCode(A)
     print(linearcode.A)
     print(linearcode.G)
+    print(linearcode.n)
+    print(linearcode.k)
