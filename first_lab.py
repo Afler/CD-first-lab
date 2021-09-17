@@ -4,6 +4,7 @@ import numpy as np
 class LinearCode:
     A = np.mat([[]], dtype=int)
     G = np.mat([[]], dtype=int)
+    X = np.mat([[]], dtype=int)
     n = 0
     k = 0
     def __init__(self, A):
@@ -11,7 +12,6 @@ class LinearCode:
         n = A.shape[1]
         B = A.copy()
         for i in range(m - 1):
-            # np.vstack([B, A[i]])
             for j in range(i + 1, m):
                 row = (A[i] + A[j]) % 2
                 isAppend = True
@@ -32,6 +32,15 @@ class LinearCode:
                 break
         self.n = self.G.shape[1]
         self.k = self.G.shape[0]
+        self.X = RREF(self.G).copy()
+        delete_columns =[]
+        for i in range(self.X.shape[0]):
+            for j in range(self.X.shape[1]):
+                if (self.X[i, j] != 0):
+                    delete_columns.append(j)
+                    break
+        print(delete_columns)
+        self.X =  np.delete(self.X, delete_columns, 1)
 
 def REF(B):
     A = B.copy()
@@ -76,3 +85,4 @@ if __name__ == '__main__':
     print(linearcode.G)
     print(linearcode.n)
     print(linearcode.k)
+    print(linearcode.X)
