@@ -6,6 +6,7 @@ class LinearCode:
     G = np.mat([[]], dtype=int)
     X = np.mat([[]], dtype=int)
     H = np.mat([[]], dtype=int)
+    allowed_words = np.mat([[]], dtype=int)
     n = 0
     k = 0
 
@@ -57,6 +58,19 @@ class LinearCode:
                 self.H[[i]] = I[iter_k]
                 iter_k += 1
         print("H =\n", self.H)
+
+        allowed_words = self.G.copy()
+        for i in range(self.G.shape[0] - 1):
+            for j in range(i + 1, self.G.shape[0]):
+                row = (self.G[i] + self.G[j]) % 2
+                isAppend = True
+                for k in range(0, allowed_words.shape[0]):
+                    if np.array_equal(allowed_words[k], row):
+                        isAppend = False
+                        break
+                if isAppend:
+                    allowed_words = np.vstack([allowed_words, row])
+        print("allowed words =\n", allowed_words)
 
 
 def REF(B):
