@@ -2,41 +2,46 @@ import numpy as np
 
 
 def printMatrix(arr, name):
-    print(name, " = ")
+    print(name, "=")
     print(arr)
 
 
 class LinearCode:
     G = np.mat([[]], dtype=int)
+    Gstar = np.mat([[]], dtype=int)
     n = 0
     k = 0
     X = np.mat([[]], dtype=int)
     H = np.mat([[]], dtype=int)
     allowed_words = np.mat([[]], dtype=int)
+    d = -1
+    t = -1
 
     def __init__(self, S):
 
         # task 1.3.1
         m = S.shape[0]
-        for i in range(m - 1):
-            for j in range(i + 1, m):
-                row = (S[i] + S[j]) % 2
-                isAppend = True
-                for k in range(0, S.shape[0]):
-                    if np.array_equal(S[k], row):
-                        isAppend = False
-                        break
-                if isAppend:
-                    S = np.vstack([S, row])
-        S = np.vstack([S, np.zeros(S.shape[1], dtype=int)])
-        self.G = RREF(S)
-        m = self.G.shape[0]
-        n = self.G.shape[1]
-        for i in range(m):
-            if np.array_equal(np.ravel(self.G[i]), np.zeros(n, dtype=int)):
-                self.G = self.G[0: i]
-                break
+        # for i in range(m - 1):
+        #     for j in range(i + 1, m):
+        #         row = (S[i] + S[j]) % 2
+        #         isAppend = True
+        #         for k in range(0, S.shape[0]):
+        #             if np.array_equal(S[k], row):
+        #                 isAppend = False
+        #                 break
+        #         if isAppend:
+        #             S = np.vstack([S, row])
+        # S = np.vstack([S, np.zeros(S.shape[1], dtype=int)])
+        self.G = REF(S)
         printMatrix(self.G, "G")
+        self.Gstar = RREF(self.G)
+        m = self.Gstar.shape[0]
+        n = self.Gstar.shape[1]
+        for i in range(m):
+            if np.array_equal(np.ravel(self.Gstar[i]), np.zeros(n, dtype=int)):
+                self.Gstar = self.Gstar[0: i]
+                break
+        printMatrix(self.Gstar, "G*")
 
         # task 1.3.2
         self.n = self.G.shape[1]
@@ -46,7 +51,7 @@ class LinearCode:
 
         # task 1.3.3
         # step 1
-        self.X = RREF(self.G)
+        self.X = self.Gstar
         # step 2
         delete_columns = []
         for i in range(self.X.shape[0]):
@@ -75,6 +80,7 @@ class LinearCode:
 
         # task 1.4.1
         allowed_words = self.G.copy()
+        allowed_words = np.vstack([allowed_words, np.zeros(allowed_words.shape[1], dtype=int)])
         for i in range(self.G.shape[0] - 1):
             for j in range(i + 1, self.G.shape[0]):
                 row = (self.G[i] + self.G[j]) % 2
@@ -102,8 +108,27 @@ class LinearCode:
                 if isAppend:
                     k_length_words = np.vstack([k_length_words, row])
                     index_to_add += 1
-        printMatrix(k_length_words, "k_length_words")
         printMatrix(k_length_words @ self.G % 2, "k@G")
+
+        # task 1.5
+
+        self.d = self.G.shape[1]
+        for i in range(self.G.shape[0]):
+            for j in range(i + 1, self.G.shape[0]):
+                self.d = min(np.count_nonzero((self.G[j] - self.G[i]) % 2), self.d)
+        self.t = self.d - 1
+        print("d =", self.d)
+        print("t =", self.t)
+
+        # task 1.5.1
+        v = np.mat([[1, 0, 1, 1, 1, 0, 1, 0, 0, 1]])
+
+        e1 = np.mat([[0, 0, 1, 0, 0, 0, 0, 0, 0, 0]])
+        print("(v + e1)@H =", (v + e1) @ self.H % 2)
+
+        e2 = np.mat([[0, 0, 0, 1, 0, 1, 0, 0, 0, 0]])
+        print("v + e2 =", (v + e2) % 2)
+        print("(v + e2)@H =", (v + e2) @ self.H % 2)
 
 
 def REF(B):
@@ -128,11 +153,12 @@ def RREF(B):
     C = REF(B).copy()
     m = C.shape[0]
     n = C.shape[1]
-    for i in range(m - 1, -1, -1):
+
+    for i in range(m - 1):
         for j in range(n):
             if C[i, j] != 0:
-                for k in range(i - 1, -1, -1):
-                    C[k, j] = 0
+                for k in range(i):
+                    C[k] = (C[k] - C[i] * C[k, j]) % 2
                 break
     return C
 
@@ -148,3 +174,7 @@ if __name__ == '__main__':
                 [1, 0, 1, 0, 1, 1, 1, 0, 0, 0],
                 [0, 0, 0, 0, 1, 0, 0, 1, 1, 1]])
     linearcode = LinearCode(S)
+    # u = [1, 0, 1, 1, 0]
+    # v = u @ linearcode.G % 2
+    # print("u@G =", v @ linearcode.H % 2)
+    # printMatrix(RREF(linearcode.G), "Gstar")
