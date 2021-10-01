@@ -20,18 +20,6 @@ class LinearCode:
     def __init__(self, S):
 
         # task 1.3.1
-        m = S.shape[0]
-        # for i in range(m - 1):
-        #     for j in range(i + 1, m):
-        #         row = (S[i] + S[j]) % 2
-        #         isAppend = True
-        #         for k in range(0, S.shape[0]):
-        #             if np.array_equal(S[k], row):
-        #                 isAppend = False
-        #                 break
-        #         if isAppend:
-        #             S = np.vstack([S, row])
-        # S = np.vstack([S, np.zeros(S.shape[1], dtype=int)])
         self.G = REF(S)
         printMatrix(self.G, "G")
         self.Gstar = RREF(self.G)
@@ -111,7 +99,6 @@ class LinearCode:
         printMatrix(k_length_words @ self.G % 2, "k@G")
 
         # task 1.5
-
         self.d = self.G.shape[1]
         for i in range(self.G.shape[0]):
             for j in range(i + 1, self.G.shape[0]):
@@ -121,14 +108,20 @@ class LinearCode:
         print("t =", self.t)
 
         # task 1.5.1
+        # фиксируем разрешенное кодовое слово
         v = np.mat([[1, 0, 1, 1, 1, 0, 1, 0, 0, 1]])
 
+        # вносим ошибку одинарной кратности
         e1 = np.mat([[0, 0, 1, 0, 0, 0, 0, 0, 0, 0]])
-        print("(v + e1)@H =", (v + e1) @ self.H % 2)
+        print("v + e1 =", (v + e1) % 2)
+        # она обнаруживается
+        print("(v + e1)@H =", ((v + e1) % 2) @ self.H % 2)
 
+        # вносим ошибку двойной кратности
         e2 = np.mat([[0, 0, 0, 1, 0, 1, 0, 0, 0, 0]])
         print("v + e2 =", (v + e2) % 2)
-        print("(v + e2)@H =", (v + e2) @ self.H % 2)
+        # она обнаруживается?
+        print("(v + e2)@H =", ((v + e2) % 2) @ self.H % 2)
 
 
 def REF(B):
