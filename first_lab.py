@@ -67,19 +67,19 @@ class LinearCode:
         printMatrix(self.H, "H")
 
         # task 1.4.1
-        allowed_words = self.G.copy()
-        allowed_words = np.vstack([allowed_words, np.zeros(allowed_words.shape[1], dtype=int)])
+        self.allowed_words = self.G.copy()
+        self.allowed_words = np.vstack([self.allowed_words, np.zeros(self.allowed_words.shape[1], dtype=int)])
         for i in range(self.G.shape[0] - 1):
             for j in range(i + 1, self.G.shape[0]):
                 row = (self.G[i] + self.G[j]) % 2
                 isAppend = True
-                for k in range(0, allowed_words.shape[0]):
-                    if np.array_equal(allowed_words[k], row):
+                for k in range(0, self.allowed_words.shape[0]):
+                    if np.array_equal(self.allowed_words[k], row):
                         isAppend = False
                         break
                 if isAppend:
-                    allowed_words = np.vstack([allowed_words, row])
-        printMatrix(allowed_words, "allowed words")
+                    self.allowed_words = np.vstack([self.allowed_words, row])
+        printMatrix(self.allowed_words, "allowed words")
 
         # task 1.4.2
         I = np.mat(np.eye(self.k, dtype=int))
@@ -107,22 +107,7 @@ class LinearCode:
         print("d =", self.d)
         print("t =", self.t)
 
-        # task 1.5.1
-        # фиксируем входное слово
-        v = np.mat([[0, 0, 0, 0, 1, 0, 0, 1, 1, 1]])
 
-        # вносим ошибку одинарной кратности
-        e1 = np.mat([[0, 0, 1, 0, 0, 0, 0, 0, 0, 0]])
-        print("v + e1 =", (v + e1) % 2)
-        # она всегда обнаруживается
-        print("(v + e1)@H =", (v + e1) @ self.H % 2)
-
-        # вносим ошибку двойной кратности
-        e2 = np.mat([[0, 0, 0, 0, 0, 0, 1, 0, 1, 0]])
-        print("v + e2 =", (v + e2) % 2)
-        # она не обнаруживается только тогда
-        # когда v и e2 принадлежат множеству векторов, порождаемых G
-        print("(v + e1)@H =", (v + e2) @ self.H % 2)
 
 
 def REF(B):
@@ -168,7 +153,20 @@ if __name__ == '__main__':
                 [1, 0, 1, 0, 1, 1, 1, 0, 0, 0],
                 [0, 0, 0, 0, 1, 0, 0, 1, 1, 1]])
     linearcode = LinearCode(S)
-    # u = [1, 0, 1, 1, 0]
-    # v = u @ linearcode.G % 2
-    # print("u@G =", v @ linearcode.H % 2)
-    # printMatrix(RREF(linearcode.G), "Gstar")
+
+    # task 1.5.1
+    # фиксируем входное слово
+    v = np.mat([[0, 0, 0, 0, 1, 0, 0, 1, 1, 1]])
+
+    # вносим ошибку одинарной кратности
+    e1 = np.mat([[0, 0, 0, 0, 0, 0, 1, 0, 0, 1]])
+    print("v + e1 =", (v + e1) % 2)
+    # она всегда обнаруживается
+    print("(v + e1)@H =", (v + e1) @ linearcode.H % 2)
+
+    # вносим ошибку двойной кратности
+    e2 = np.mat([[0, 0, 0, 0, 0, 0, 1, 0, 1, 0]])
+    print("v + e2 =", (v + e2) % 2)
+    # она не обнаруживается только тогда
+    # когда v и e2 принадлежат множеству векторов, порождаемых G
+    print("(v + e1)@H =", (v + e2) @ linearcode.H % 2)
