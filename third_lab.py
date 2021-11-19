@@ -12,7 +12,9 @@ class HammingCode:
     k = 0
     d = 3
     G = np.mat([[]], dtype=int)
+    GSTAR = np.mat([[]], dtype=int)
     H = np.mat([[]], dtype=int)
+    HSTAR = np.mat([[]], dtype=int)
     t = 0
 
     def __init__(self, r):
@@ -61,9 +63,39 @@ class HammingCode:
         # Вывод: Код Хеминга действительно исправляет однократные,
         # обнаруживает двукратные и возникает неопределеность для трехкратных ошибок
 
+        # task 3.3
+        # расширенный
+        self.GSTAR = np.mat(np.zeros([self.k, self.n + 1]), dtype=int)
+        self.GSTAR[:, 0: self.n] = self.G.copy()
+        for i in range(0, self.GSTAR.shape[0]):
+            count = np.count_nonzero(self.GSTAR[i, :])
+            if count % 2 == 1:
+                self.GSTAR[i, self.GSTAR.shape[1] - 1] = 1
+        printMatrix(self.GSTAR, "GSTAR")
+        self.HSTAR = self.H.copy()
+        self.HSTAR = np.vstack([self.HSTAR, np.zeros([1, self.HSTAR.shape[1]], dtype=int)])
+        self.HSTAR = np.hstack([self.HSTAR, np.ones([self.HSTAR.shape[0], 1], dtype=int)])
+        printMatrix(self.HSTAR, "HSTAR")
+        syndromesExpanded = (np.mat(np.eye(self.n + 1, dtype=int)) @ self.HSTAR) % 2
+        printMatrix(syndromesExpanded, "syndromesExpanded")
+
+        word = self.GSTAR[[0]]
+        # Однократная ошибка
+        word[0, 0] = (word[0, 0] + 1) % 2
+        wordSyndrome = (word @ self.HSTAR) % 2
+        printMatrix(wordSyndrome, "wordSyndrome1")
+        # Двукратная ошибка
+        word[0, 1] = (word[0, 1] + 1) % 2
+        wordSyndrome = (word @ self.HSTAR) % 2
+        printMatrix(wordSyndrome, "wordSyndrome2")
+        # Трехкратная ошибка
+        word[0, 2] = (word[0, 2] + 1) % 2
+        wordSyndrome = (word @ self.HSTAR) % 2
+        printMatrix(wordSyndrome, "wordSyndrome3")
+
 
 if __name__ == '__main__':
     hammingThreeOne = HammingCode(3)
-    #hammingSevenFour = HammingCode(3)
-    #hammingFifteenEleven = HammingCode(4)
+    # hammingSevenFour = HammingCode(3)
+    # hammingFifteenEleven = HammingCode(4)
     print("End")
