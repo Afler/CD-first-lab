@@ -92,10 +92,11 @@ class HammingCode:
         word[0, 2] = (word[0, 2] + 1) % 2
         wordSyndrome = (word @ self.HSTAR) % 2
         printMatrix(wordSyndrome, "wordSyndrome3")
-
+        # Расширенный код Хэмминга позволяет ОДНОВРЕМЕННО и исправлять ошибку однократной кратности и обнаруживать двукратную (если последний
+        # элемент произведения полученного слова на проверочную матрицу равен 0). Трёхкратные рандом.
 
 if __name__ == '__main__':
-    hammingThreeOne = HammingCode(3)
+    hammingThreeOne = HammingCode(4)
     # hammingSevenFour = HammingCode(3)
     # hammingFifteenEleven = HammingCode(4)
     print("End")
