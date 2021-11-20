@@ -1,17 +1,50 @@
 import numpy as np
 
 
+def C(n, k):
+    if 0 <= k <= n:
+        nn = 1
+        kk = 1
+        for t in range(1, min(k, n - k) + 1):
+            nn *= n
+            kk *= t
+            n -= 1
+        return nn // kk
+    else:
+        return 0
+
+
 def printMatrix(arr, name):
     print(name, "=")
     print(arr)
 
 
 def getG(r, m):
-    n = 2 ** m
-    G = np.mat(np.zeros(m), dtype=int)
-    for i in range(n):
-        G[[i]] = getVValues(I, m)
+    rows_in_block = 0
+    I = np.zeros([1, m], dtype=int)
+    G = np.mat(np.ones([1, 2 ** m]), dtype=int)
+    for i in range(m):
+        I[0, i] = i
+    for i in range(1, m - 1):
+        countInd = I[0, i]
+        rows_in_block = C(m, countInd)
+        vIndFirst = np.mat(np.zeros([1, countInd]), dtype=int)
+        for z in range(rows_in_block):
+            a = z
+            for j in range(countInd):
+                vIndFirst[0, vIndFirst.shape[1] - 1 - j] = I[0, I.shape[1] - 1 - a]
+                print(vIndFirst[0, vIndFirst.shape[1] - 1 - j])
+                a = a + 1
+
+
+        # for j in range(vIndFirst.shape[1]):
+        #     vIndFirst[0, j] = I[0, I.shape[1] - 1 - j]
+        #     print(vIndFirst[0, j])
+        #     for y in range(vIndFirst.shape[1]):
+        #         G = np.vstack([G, getVValues(vIndFirst, m)])
+
     return G
+
 
 
 def getVValues(I, m):
@@ -73,7 +106,9 @@ class CanonicalRMCode:
 
 
 if __name__ == '__main__':
+    # print(C(4, 3))
+    # print(C(4, 2))
     canonicalRM = CanonicalRMCode(3, 4)
-    v = getVValues(np.mat([2]), 4)
-    print(v)
+    print(canonicalRM.G)
+    # print(v)
     print("End")
