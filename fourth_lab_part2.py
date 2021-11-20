@@ -74,14 +74,6 @@ class RidMaller:
         answer = np.mat(np.zeros([1, len(jBin) + 1]), dtype=int)
         for i in range(1, answer.shape[1]):
             answer[0, i] = int(jBin[i - 1])
-        # если ошибка кратности больше обнаруживаемой
-        # count = 0
-        # copyVal = val.copy()
-        # while (copyVal > 0):
-        #     copyVal = int(copyVal / 2)
-        #     count = count + 1
-        # if count >= self.m:
-        #     return answer, False
         if val > 0:
             answer[0, 0] = 1
             return answer, True
@@ -92,17 +84,22 @@ class RidMaller:
     def getIndexWithValue(self, wWave):
         w = np.mat(np.zeros([self.m, wWave.shape[1]]), dtype=int)
         w[[0]] = wWave @ getH(1, self.m)
-        # printMatrix(w[[0]], "w" + str(1))
         for i in range(1, self.m):
             w[[i]] = w[[i - 1]] @ getH(i + 1, self.m)
-            # printMatrix(w[[i]], "w" + str(i))
-        amax = np.amax(w, axis=0)
+        amax = np.amax(abs(w), axis=0)
+
         j = np.argmax(amax, axis=1)
-        val = np.max(w[:, j])
-        for i in range(amax.shape[1]):
+        i = -15
+        c = abs(w[0, j])
+        for k in range(1, w.shape[0]):
+            if abs(w[k, j]) > c:
+                c = abs(w[k, j])
+                i = k
+        val = w[i, j]
+        for i in range(amax.shape[1]): # цикл, который ищет дубликат максимума, если нашёл, значит четырёхкратная
             if i == j:
                 continue
-            if amax[0, i] == val:
+            if amax[0, i] == abs(val):
                 j = -1
         return int(j), val
 
@@ -113,29 +110,29 @@ if __name__ == '__main__':
     printMatrix(mallerOneThreeG, "MallerGenerateMatrix")
     word = np.mat([1, 0, 1, 0, 1, 0, 1, 1], dtype=int)
     originWord, _ = mallerOneThree.decode(word)
-    originWord[0, 0] = 0
-    check = (originWord @ mallerOneThreeG) % 2
-    ddff = mallerOneThree.decode(check)
-    printMatrix(ddff,"sdf")
-    printMatrix(check,"check")
-    printMatrix(originWord, "OneErrorMessage")
-    codedWord = (originWord @ mallerOneThreeG) % 2
-    # В соответствие с полученным видом исходного слова заключем, что в него была внесена однократная ошибка в последнем
+    # В соответствие с полученным видом исходного слова понимаем, что в него была внесена однократная ошибка в последнем
     # бите
     # Далее будем увеличивать кратность ошибки
+    # originWord[0, 0] = 0 это чтобы ноль слева добавлялся
+    printMatrix(originWord, "originWord")
+    codedWord = (originWord @ mallerOneThreeG) % 2
     codedWord[0, 0] = (codedWord[0, 0] + 1) % 2
+    originWord = mallerOneThree.decode(codedWord)
+    printMatrix(originWord, "OneErrorMessage")
     codedWord[0, 1] = (codedWord[0, 1] + 1) % 2
     originWord = mallerOneThree.decode(codedWord)
     printMatrix(originWord, "TwoErrorMessage")
     print()
     # Ошибки исправляются правильно
+
     # Теперь проверим для RM(1,4)
     mallerOneFour = RidMaller(1, 4)
     mallerOneFourG = mallerOneFour.getG()
 
     message = np.mat([1, 0, 1, 0, 0], dtype=int)
+    # message[0, 0] = (message[0, 0] + 1) % 2 это чтобы ноль добавлялся слева
     codeWord = (message @ mallerOneFourG) % 2
-    # codeWord = mallerOneFourG[[2]]
+
     originWord, isFixable = mallerOneFour.decode(codeWord)
     printMatrix(originWord, "NoErrorMessage")
 
@@ -155,10 +152,6 @@ if __name__ == '__main__':
     originWord = mallerOneFour.decode(codeWord)
     printMatrix(originWord, "FourErrorMessage")
 
-    codeWord[0, 4] = (codeWord[0, 4] + 1) % 2
-    originWord = mallerOneFour.decode(codeWord)
-    printMatrix(originWord, "FiveErrorMessage")
     # Код РМ(1,4) позволяет получать исходное расшифрованние слово для однократной, двукратной, трехкратной ошибки
     # показывает, что не может исправить слово с четырехкратной ошибкой(обнаруживает)
-    # пятикратные и выше получает неверные исходные слова
     print("End")
