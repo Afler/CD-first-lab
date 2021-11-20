@@ -87,16 +87,11 @@ class RidMaller:
         for i in range(1, self.m):
             w[[i]] = w[[i - 1]] @ getH(i + 1, self.m)
         amax = np.amax(abs(w), axis=0)
-
-        j = np.argmax(amax, axis=1)
-        i = -15
-        c = abs(w[0, j])
-        for k in range(1, w.shape[0]):
-            if abs(w[k, j]) > c:
-                c = abs(w[k, j])
-                i = k
+        indexes = np.unravel_index(np.argmax(abs(w)), w.shape)
+        i = indexes[0]
+        j = indexes[1]
         val = w[i, j]
-        for i in range(amax.shape[1]): # цикл, который ищет дубликат максимума, если нашёл, значит четырёхкратная
+        for i in range(amax.shape[1]):  # цикл, который ищет дубликат максимума, если нашёл, значит четырёхкратная
             if i == j:
                 continue
             if amax[0, i] == abs(val):
@@ -113,7 +108,7 @@ if __name__ == '__main__':
     # В соответствие с полученным видом исходного слова понимаем, что в него была внесена однократная ошибка в последнем
     # бите
     # Далее будем увеличивать кратность ошибки
-    # originWord[0, 0] = 0 это чтобы ноль слева добавлялся
+    # originWord[0, 0] = 0 #это чтобы ноль слева добавлялся
     printMatrix(originWord, "originWord")
     codedWord = (originWord @ mallerOneThreeG) % 2
     codedWord[0, 0] = (codedWord[0, 0] + 1) % 2
@@ -130,7 +125,7 @@ if __name__ == '__main__':
     mallerOneFourG = mallerOneFour.getG()
 
     message = np.mat([1, 0, 1, 0, 0], dtype=int)
-    # message[0, 0] = (message[0, 0] + 1) % 2 это чтобы ноль добавлялся слева
+    # message[0, 0] = (message[0, 0] + 1) % 2 # это чтобы ноль добавлялся слева
     codeWord = (message @ mallerOneFourG) % 2
 
     originWord, isFixable = mallerOneFour.decode(codeWord)
