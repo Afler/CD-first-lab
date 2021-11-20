@@ -7,8 +7,8 @@ def printMatrix(arr, name):
 
 
 def KroneckerMultiply(A, B):
-    n = A.shape[0] if A.shape[0] >= B.shape[0] else B.shape[0]
-    result = np.mat(np.zeros([2 * n, 2 * n]), dtype=int)
+    # n = A.shape[0] if A.shape[0] >= B.shape[0] else B.shape[0]
+    result = np.mat(np.zeros(B.shape[0] * A.shape[0]), dtype=int)
     for i in range(A.shape[0]):
         for j in range(A.shape[1]):
             result[i * B.shape[0]:(i + 1) * B.shape[0], j * B.shape[1]:(j + 1) * B.shape[1]] = A[i, j] * B
@@ -18,11 +18,12 @@ def KroneckerMultiply(A, B):
 def getH(i, m):
     H = np.mat([[1, 1], [1, -1]])
     if i - 1 == 0:
-        return KroneckerMultiply(np.eye(2 ** (m - i)), H)
+        return np.kron(np.eye(2 ** (m - i)), H)
     elif m - i == 0:
-        return KroneckerMultiply(H, np.eye(2 ** (i - 1)))
+        return np.kron(H, np.eye(2 ** (i - 1)))
     else:
-        return KroneckerMultiply(KroneckerMultiply(np.eye(2 ** (m - i)), H), np.eye(2 ** (i - 1)))
+        multiply = np.kron(np.eye(2 ** (m - i)), H)
+        return np.kron(multiply, np.eye(2 ** (i - 1)))
 
 
 class RidMaller:
@@ -65,28 +66,44 @@ class RidMaller:
             if w[0, i] == 0:
                 wWave[0, i] = -1
         j, val = self.getIndexWithValue(wWave)
+        if j == -1:
+            return None, False
         jBin = (bin(j)[2:])[::-1]
         for i in range(len(jBin), self.m):
             jBin += str(0)
         answer = np.mat(np.zeros([1, len(jBin) + 1]), dtype=int)
         for i in range(1, answer.shape[1]):
             answer[0, i] = int(jBin[i - 1])
+        # если ошибка кратности больше обнаруживаемой
+        # count = 0
+        # copyVal = val.copy()
+        # while (copyVal > 0):
+        #     copyVal = int(copyVal / 2)
+        #     count = count + 1
+        # if count >= self.m:
+        #     return answer, False
         if val > 0:
             answer[0, 0] = 1
-            return answer
+            return answer, True
         else:
             answer[0, 0] = 0
-            return answer
+            return answer, True
 
     def getIndexWithValue(self, wWave):
         w = np.mat(np.zeros([self.m, wWave.shape[1]]), dtype=int)
         w[[0]] = wWave @ getH(1, self.m)
-        #printMatrix(w[[0]], "w" + str(1))
+        # printMatrix(w[[0]], "w" + str(1))
         for i in range(1, self.m):
             w[[i]] = w[[i - 1]] @ getH(i + 1, self.m)
-            #printMatrix(w[[i]], "w" + str(i))
-        j = np.argmax(np.amax(w, axis=0), axis=1)
+            # printMatrix(w[[i]], "w" + str(i))
+        amax = np.amax(w, axis=0)
+        j = np.argmax(amax, axis=1)
         val = np.max(w[:, j])
+        for i in range(amax.shape[1]):
+            if i == j:
+                continue
+            if amax[0, i] == val:
+                j = -1
         return int(j), val
 
 
@@ -95,7 +112,12 @@ if __name__ == '__main__':
     mallerOneThreeG = mallerOneThree.getG()
     printMatrix(mallerOneThreeG, "MallerGenerateMatrix")
     word = np.mat([1, 0, 1, 0, 1, 0, 1, 1], dtype=int)
-    originWord = mallerOneThree.decode(word)
+    originWord, _ = mallerOneThree.decode(word)
+    originWord[0, 0] = 0
+    check = (originWord @ mallerOneThreeG) % 2
+    ddff = mallerOneThree.decode(check)
+    printMatrix(ddff,"sdf")
+    printMatrix(check,"check")
     printMatrix(originWord, "OneErrorMessage")
     codedWord = (originWord @ mallerOneThreeG) % 2
     # В соответствие с полученным видом исходного слова заключем, что в него была внесена однократная ошибка в последнем
@@ -105,28 +127,38 @@ if __name__ == '__main__':
     codedWord[0, 1] = (codedWord[0, 1] + 1) % 2
     originWord = mallerOneThree.decode(codedWord)
     printMatrix(originWord, "TwoErrorMessage")
+    print()
     # Ошибки исправляются правильно
     # Теперь проверим для RM(1,4)
     mallerOneFour = RidMaller(1, 4)
     mallerOneFourG = mallerOneFour.getG()
 
-    codeWord = mallerOneFourG[[0]]
-    originWord = mallerOneFour.decode(codeWord)
+    message = np.mat([1, 0, 1, 0, 0], dtype=int)
+    codeWord = (message @ mallerOneFourG) % 2
+    # codeWord = mallerOneFourG[[2]]
+    originWord, isFixable = mallerOneFour.decode(codeWord)
     printMatrix(originWord, "NoErrorMessage")
 
-    codedWord[0, 0] = (codedWord[0, 0] + 1) % 2
+    codeWord[0, 0] = (codeWord[0, 0] + 1) % 2
     originWord = mallerOneFour.decode(codeWord)
     printMatrix(originWord, "OneErrorMessage")
 
-    codedWord[0, 1] = (codedWord[0, 1] + 1) % 2
+    codeWord[0, 1] = (codeWord[0, 1] + 1) % 2
     originWord = mallerOneFour.decode(codeWord)
     printMatrix(originWord, "TwoErrorMessage")
 
-    codedWord[0, 2] = (codedWord[0, 2] + 1) % 2
+    codeWord[0, 2] = (codeWord[0, 2] + 1) % 2
     originWord = mallerOneFour.decode(codeWord)
     printMatrix(originWord, "ThreeErrorMessage")
 
-    codedWord[0, 3] = (codedWord[0, 3] + 1) % 2
+    codeWord[0, 3] = (codeWord[0, 3] + 1) % 2
     originWord = mallerOneFour.decode(codeWord)
     printMatrix(originWord, "FourErrorMessage")
+
+    codeWord[0, 4] = (codeWord[0, 4] + 1) % 2
+    originWord = mallerOneFour.decode(codeWord)
+    printMatrix(originWord, "FiveErrorMessage")
+    # Код РМ(1,4) позволяет получать исходное расшифрованние слово для однократной, двукратной, трехкратной ошибки
+    # показывает, что не может исправить слово с четырехкратной ошибкой(обнаруживает)
+    # пятикратные и выше получает неверные исходные слова
     print("End")
