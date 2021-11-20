@@ -1,5 +1,5 @@
 import numpy as np
-
+import itertools
 
 def C(n, k):
     if 0 <= k <= n:
@@ -18,31 +18,54 @@ def printMatrix(arr, name):
     print(name, "=")
     print(arr)
 
+def getIndexMatrix(n, k, I):
+    result = np.mat(np.zeros([0, k]), dtype=int)
+    tolist = I[0, :].tolist()
+    res = itertools.permutations(tolist, k)
+    for i in res:
+        isCorrectRow = True
+        row = i
+        for j in range(len(row)):
+            for b in range(j + 1, len(row)):
+                if row[j] > row[b]:
+                    isCorrectRow = False
+                    break
+            if not isCorrectRow:
+                break
+        if isCorrectRow:
+           result = np.vstack([result, row])
+    return result
+
 
 def getG(r, m):
     rows_in_block = 0
+    blockNumber = np.zeros([0, 1], dtype=int)
     I = np.zeros([1, m], dtype=int)
     G = np.mat(np.ones([1, 2 ** m]), dtype=int)
+    allIndexesMatrix = np.mat(np.zeros([0, r], dtype=int))
     for i in range(m):
         I[0, i] = i
-    for i in range(1, m - 1):
-        countInd = I[0, i]
-        rows_in_block = C(m, countInd)
-        vIndFirst = np.mat(np.zeros([1, countInd]), dtype=int)
-        for z in range(rows_in_block):
-            a = z
-            for j in range(countInd):
-                vIndFirst[0, vIndFirst.shape[1] - 1 - j] = I[0, I.shape[1] - 1 - a]
-                print(vIndFirst[0, vIndFirst.shape[1] - 1 - j])
-                a = a + 1
-
-
-        # for j in range(vIndFirst.shape[1]):
-        #     vIndFirst[0, j] = I[0, I.shape[1] - 1 - j]
-        #     print(vIndFirst[0, j])
-        #     for y in range(vIndFirst.shape[1]):
-        #         G = np.vstack([G, getVValues(vIndFirst, m)])
-
+    for i in range(I.shape[1] - 1, -1, -1):
+        v_values = getVValues(np.mat(I[0, i]), m)
+        G = np.vstack([G, v_values])
+        mat = I[0, i]
+        mat = np.hstack([np.zeros([1, r - 1], dtype=int), np.mat(mat, dtype=int)])
+        allIndexesMatrix = np.vstack([allIndexesMatrix, mat])
+        blockNumber = np.vstack([blockNumber, np.mat([1])])
+    for i in range(2, m):
+        rows_in_block = C(m, i)
+        matrixWithBlockIndex = getIndexMatrix(rows_in_block, i, I)
+        matrixWithBlockIndex = np.hstack([np.zeros([matrixWithBlockIndex.shape[0], r - matrixWithBlockIndex.shape[1]], dtype=int), matrixWithBlockIndex])
+        allIndexesMatrix = np.vstack([allIndexesMatrix, matrixWithBlockIndex])
+        np_mat = np.mat([i])
+        np_mat = np.resize(np_mat, (matrixWithBlockIndex.shape[0], 1))
+        blockNumber = np.vstack([blockNumber, np_mat])
+        for j in range(matrixWithBlockIndex.shape[0]):
+            G = np.vstack([G, getVValues(matrixWithBlockIndex[[j]], m)])
+            printMatrix(G, "G")
+    allIndexesMatrix = np.hstack([blockNumber, allIndexesMatrix])
+    c = 0
+    c +=1
     return G
 
 
