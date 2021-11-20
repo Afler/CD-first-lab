@@ -1,8 +1,7 @@
 import numpy as np
 
 
-def printMatrix(arr,
-                name):
+def printMatrix(arr, name):
     print(name, "=")
     print(arr)
 
@@ -48,7 +47,6 @@ class GoleyaCode:
         # пример для первого случая когда две ошибки слева одна справа у принятого слова
         # word = np.mat([[0, 0, 0, 0, 1, 0, 0, 1, 0, 1, 0, 0, 1, 1, 1, 0, 1, 1, 1, 1, 1, 1, 0, 0]])
 
-
         printMatrix(word, "correctword  sending start")
         # Однократная ошибка или двукратную или трёхкратную с левой стороны все - первый случай у принятого слова
         # word[0, 0] = (word[0, 0] + 1) % 2
@@ -65,14 +63,13 @@ class GoleyaCode:
         word[0, 14] = (word[0, 14] + 1) % 2
         word[0, 13] = (word[0, 13] + 1) % 2
 
-
         printMatrix(word, "word with error")
         wordSyndrome = (word @ self.H) % 2
         printMatrix(wordSyndrome, "wordSyndrome1")
         countErrors = np.count_nonzero(wordSyndrome)
         if countErrors <= 3:
             correctword1 = word.copy()
-            wordSyndrome = np.hstack([wordSyndrome, np.mat(np.zeros([1, 12]), dtype= int)])
+            wordSyndrome = np.hstack([wordSyndrome, np.mat(np.zeros([1, 12]), dtype=int)])
             correctword1 = (word + wordSyndrome) % 2
             printMatrix(correctword1, "correctword finish")
             print("errors: " + str(countErrors))
@@ -81,7 +78,7 @@ class GoleyaCode:
                 check = (wordSyndrome + self.B[[i]]) % 2
                 if np.count_nonzero(check) <= 2:
                     print("section 3) b with index", str(i))
-                    e = np.zeros([1, 12], dtype= int)
+                    e = np.zeros([1, 12], dtype=int)
                     e[0, i] = 1
                     check = np.hstack([check, e])
                     printMatrix(check, "correct decryption word section 3)")
@@ -92,7 +89,7 @@ class GoleyaCode:
         countErrors = np.count_nonzero(secondSyndrom)
         if countErrors <= 3:
             correctword1 = word.copy()
-            secondSyndrom = np.hstack([np.mat(np.zeros([1, 12]), dtype= int), secondSyndrom])
+            secondSyndrom = np.hstack([np.mat(np.zeros([1, 12]), dtype=int), secondSyndrom])
             correctword1 = (word + secondSyndrom) % 2
             printMatrix(correctword1, "correctword finish section 4)")
             print("errors: " + str(countErrors))
@@ -101,14 +98,11 @@ class GoleyaCode:
                 check = (secondSyndrom + self.B[[i]]) % 2
                 if np.count_nonzero(check) <= 2:
                     print("section5) b with index", str(i))
-                    e = np.zeros([1, 12], dtype= int)
+                    e = np.zeros([1, 12], dtype=int)
                     e[0, i] = 1
                     check = np.hstack([e, check])
                     printMatrix(check, "correct decryption word section 5")
                     break
-
-
-
 
     # Двукратная ошибка
     # word[0, 1] = (word[0, 1] + 1) % 2
