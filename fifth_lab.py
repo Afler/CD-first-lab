@@ -1,6 +1,7 @@
 import numpy as np
 import itertools
 
+
 def C(n, k):
     if 0 <= k <= n:
         nn = 1
@@ -18,6 +19,7 @@ def printMatrix(arr, name):
     print(name, "=")
     print(arr)
 
+
 def getIndexMatrix(n, k, I):
     result = np.mat(np.zeros([0, k]), dtype=int)
     tolist = I[0, :].tolist()
@@ -33,7 +35,7 @@ def getIndexMatrix(n, k, I):
             if not isCorrectRow:
                 break
         if isCorrectRow:
-           result = np.vstack([result, row])
+            result = np.vstack([result, row])
     return result
 
 
@@ -64,10 +66,52 @@ def getG(r, m):
             G = np.vstack([G, getVValues(matrixWithBlockIndex[[j]], m)])
             printMatrix(G, "G")
     allIndexesMatrix = np.hstack([blockNumber, allIndexesMatrix])
-    c = 0
-    c +=1
-    return G
 
+    #сортировка матрицы индексов
+
+    column = allIndexesMatrix[:, 0]
+    for i in range(1, m):
+        for j in range(allIndexesMatrix.shape[0] - 1):  # - 1
+            for k in range(j + 1, allIndexesMatrix.shape[0]):
+                if i == column[j] and i == column[k]:
+                    sumCur = np.sum(allIndexesMatrix[[j]])
+                    sumNext = np.sum(allIndexesMatrix[[k]])
+                    if (sumNext > sumCur):
+                        G[[j + 1, k + 1]] = G[[k + 1, j + 1]]
+                        allIndexesMatrix[[j, k]] = allIndexesMatrix[[k, j]]
+                    elif sumNext == sumCur:
+                        if allIndexesMatrix[j, allIndexesMatrix.shape[1] - 1] < allIndexesMatrix[k, allIndexesMatrix.shape[1] - 1]:
+                            G[[j + 1, k + 1]] = G[[k + 1, j + 1]]
+                            allIndexesMatrix[[j, k]] = allIndexesMatrix[[k, j]]
+
+    # формирование двоичных чисел в обратной записи
+
+    U = np.zeros([0, m], dtype=int)
+    binaryToAdd = np.mat(np.zeros([1, m]), dtype=int)
+    for i in range(2 ** m):
+        binaryIStr = (bin(i)[2:])[::-1]
+        for j in range(len(binaryIStr), m):
+            binaryIStr += "0"
+        for k in range(len(binaryIStr)):
+            binaryToAdd[0, k] = binaryIStr[k]
+        U = np.vstack([U, binaryToAdd])
+    answerG = np.zeros([0, 2 ** m], dtype=int)
+    rowG = np.mat(np.zeros([1, 2 ** m]), dtype=int)
+
+    # создание матрицы G
+
+    for i in range(allIndexesMatrix.shape[0]):
+        rowIndexx = allIndexesMatrix[i, allIndexesMatrix.shape[1] - allIndexesMatrix[i, 0]: allIndexesMatrix.shape[1]]
+        for j in range(0, U.shape[0] - 1):
+            #indexesOnes = np.nonzero(U[[j]])
+            if np.count_nonzero(U[j, rowIndexx]) > 0:
+                rowG[0, j] = 0
+            else:
+                rowG[0, j] = 1
+        answerG = np.vstack([answerG, rowG])
+    answerG = np.vstack([np.mat(np.ones([1, 2 ** m]), dtype=int), answerG])
+    printMatrix(answerG, "GDSG")
+    return answerG
 
 
 def getVValues(I, m):
