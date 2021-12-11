@@ -25,7 +25,7 @@ def fExpanded(vector, indexes, t):
 
 
 def f(vector, indexes):
-    if np.count_nonzero(vector[1, indexes]) > 0:
+    if np.count_nonzero(vector[0, indexes]) > 0:
         return 0
     else:
         return 1
@@ -114,7 +114,7 @@ def getG(r, m):
                 rowG[0, j] = 1
         answerG = np.vstack([answerG, rowG])
     answerG = np.vstack([np.mat(np.ones([1, 2 ** m]), dtype=int), answerG])
-    return answerG, allIndexesMatrix
+    return answerG, allIndexesMatrix, U, I
 
 
 def fillX(m):
@@ -150,50 +150,127 @@ class CanonicalRMCode:
     d = 0
     G = np.mat([[]], dtype=int)
     indexesMatrix = 0
+    U = 0
 
     def __init__(self, r, m):
         self.r = r
         self.m = m
         self.n = 2 ** m
         self.d = 2 ** (self.m - self.r)
+        self.I = 0
         for i in range(r + 1):
             self.k += С(self.n, i)
-        self.G, self.indexesMatrix = getG(r, m)
+        self.G, self.indexesMatrix, self.U, self.I = getG(r, m)
+
+
+    def createH(self, index):
+        H = np.zeros([0, self.U.shape[1]], dtype=int)
+        for j in range(self.U.shape[0]):
+            if f(self.U[[j]], index) == 1:
+                H = np.vstack([H, self.U[[j]]])
+        return H
+
+    def computeScalarMultiply(self, word, howManyZeros, howManyOnes, rowV):
+        rowV = np.transpose(rowV)
+        result = (word @ rowV) % 2
+        if result == 1:
+            howManyOnes = howManyOnes + 1
+        else:
+            howManyZeros = howManyZeros + 1
+        return howManyZeros, howManyOnes
+
+    def newGetComplanar(self, indexes):
+        I = self.I
+        return np.setdiff1d(np.ravel(I), np.ravel(indexes))
+
+    def getComplanar(self, indexes):
+        I = self.I
+        indexes = set(np.ravel(indexes))
+        indexes = np.mat(indexes)
+        complanarIndexes = np.zeros([1, I.shape[1] - indexes.shape[1]], dtype=int)
+        place = 0
+        for i in range(I.shape[1]):
+            check = 0
+            for j in range(indexes.shape[1]):
+                if I[0, i] == indexes[0, j]:
+                    check = 1
+            if check == 0:
+                complanarIndexes[0, place] = I[0, i]
+                place = place + 1
+        return complanarIndexes
 
     def decodeStep2(self, i, word):
-        MMatrix = np.mat(np.zeros([0, self.indexesMatrix.shape[1]]))
+        MMatrix = np.mat(np.zeros([0, self.indexesMatrix.shape[1]]), dtype=int)
         # по строкам матрицы индексов
         for k in range(self.indexesMatrix.shape[0]):
+            howManyZeros = 0
+            howManyOnes = 0
             # для строк подходящей мощности
             if self.indexesMatrix[k, 0] == i:
                 # пока 0 или 1 не встретятся более чем 2 ** (self.m - i - 1) раз
-                while True:
-                    for t in range():
-                        howManyZeros, howManyOnes = computeScalarMultiply(word)
+                key = 0
+                while key == 0:
+                    # матрица H для блока
+                    H = self.createH(self.indexesMatrix[k, 1:self.indexesMatrix.shape[1]])
+                    # вектор v  со значениями для перемножения w(i) на v для блока
+                    # indexComplanar = self.getComplanar(self.indexesMatrix[k, 1:self.indexesMatrix.shape[1]])
+                    indexComplanar = self.newGetComplanar(self.indexesMatrix[k, 1:self.indexesMatrix.shape[1]])
+                    V = self.calculateVH(indexComplanar, H)
+                    for t in range(V.shape[0]):
+                        howManyZeros, howManyOnes = self.computeScalarMultiply(word, howManyZeros, howManyOnes, V[[t]])
                         if howManyZeros > 2 ** (self.m - self.r - 1) and howManyOnes > 2 ** (self.m - self.r - 1):
                             print("Запрашиваем повторную отправку сообщения")
-                            pass
+                            key = 1
                         if howManyZeros > 2 ** (self.m - i - 1) or howManyOnes > 2 ** (self.m - i - 1):
                             m = self.indexesMatrix[[k]]
-                            m[0] = 1 if howManyOnes > howManyZeros else 0
+                            m[0, 0] = 1 if howManyOnes > howManyZeros else 0
                             MMatrix = np.vstack([MMatrix, m])
+                            key = 1
         return MMatrix
 
-    def decodeStep3(self, previousNext):
+    def decodeStep3(self, currentW, MMatrix):
+        sum = 0
+        # суммма Mj*Vj
+        for k in range(MMatrix.shape[0]):
+            sum = sum + MMatrix[k, 0] * self.calculateV(MMatrix, k)
+        newW = (currentW + sum) % 2
+        return newW
 
-        return 0
+    def calculateVH(self, indexes, H):
+        V = np.mat(np.zeros([0, self.U.shape[0]], dtype=int))
+        # стакаем одну строку v в матрицу всех V для блока
+        for t in range(H.shape[0]):
+            v = np.zeros([1, self.U.shape[0]], dtype=int)
+            # проинициализировать одно число в строке
+            for j in range(self.U.shape[0]):
+                v[0, j] = fExpanded(self.U[[j]], indexes, np.ravel(H[[t]]))
+            V = np.vstack([V, v])
+        return V
+
+    def calculateV(self, MMatrix, k):
+        v = np.zeros([1, self.U.shape[0]], dtype=int)
+        for t in range(self.U.shape[0]):
+            v[0, t] = f(self.U[[t]], MMatrix[k, 1:MMatrix.shape[1]])
+        return v
 
     def decode(self, word):
         i = self.r
-        WMatrix = np.mat(np.zeros([self.r, word.shape[1]]))
+        WMatrix = np.mat(np.zeros([self.r, word.shape[1]]), dtype=int)
         WMatrix = np.vstack([WMatrix, word])
-        MMatrix = self.decodeStep2(i, word)
-        if i > 0:
-            WMatrix[[i - 1]] = self.decodeStep3(WMatrix[[i]])
-            # если вес вычисленного w не более
-            if np.count_nonzero(WMatrix[[i - 1]]) <= 2 ** (self.m - self.r - 1) - 1:
-                pass
-        pass
+        while True:
+            MMatrix = self.decodeStep2(i, word)
+            if i > 0:
+                WMatrix[[i - 1]] = self.decodeStep3(WMatrix[[i]], MMatrix)
+                # если вес вычисленного w не более
+                if np.count_nonzero(WMatrix[[i - 1]]) <= 2 ** (self.m - self.r - 1) - 1:
+                    MMatrix[:, 0] = 0
+                    pass
+                else:
+                    i = i - 1
+            if i <= 0:
+                break
+        sourceWord = MMatrix[:, 0][::-1]
+        return sourceWord
 
 
 if __name__ == '__main__':
@@ -203,5 +280,9 @@ if __name__ == '__main__':
     printMatrix(canonicalRM.G, "G:")
     printMatrix(canonicalRM.indexesMatrix, "indexesMatrix:")
     print(str(canonicalRM.G.shape[0]) + "x" + str(canonicalRM.G.shape[1]))
+    recvWord = np.mat([[0, 1, 0, 1, 0, 1, 1, 1, 1, 0, 1, 0, 0, 0, 0, 0]])
+    sourseWord = canonicalRM.decode(recvWord)
+    printMatrix(sourseWord, "answer:")
+
     # print(fExpanded(np.mat([[0, 0, 1, 0]]), np.mat([[2, 3]]), np.mat([[0, 0, 1, 0]])))
     print("End")
