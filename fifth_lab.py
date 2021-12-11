@@ -40,16 +40,14 @@ def getIndexMatrix(n, k, I):
 
 
 def getG(r, m):
-    rows_in_block = 0
+
     blockNumber = np.zeros([0, 1], dtype=int)
     I = np.zeros([1, m], dtype=int)
-    G = np.mat(np.ones([1, 2 ** m]), dtype=int)
     allIndexesMatrix = np.mat(np.zeros([0, r], dtype=int))
     for i in range(m):
         I[0, i] = i
     for i in range(I.shape[1] - 1, -1, -1):
-        v_values = getVValues(np.mat(I[0, i]), m)
-        G = np.vstack([G, v_values])
+
         mat = I[0, i]
         mat = np.hstack([np.zeros([1, r - 1], dtype=int), np.mat(mat, dtype=int)])
         allIndexesMatrix = np.vstack([allIndexesMatrix, mat])
@@ -62,9 +60,7 @@ def getG(r, m):
         np_mat = np.mat([i])
         np_mat = np.resize(np_mat, (matrixWithBlockIndex.shape[0], 1))
         blockNumber = np.vstack([blockNumber, np_mat])
-        for j in range(matrixWithBlockIndex.shape[0]):
-            G = np.vstack([G, getVValues(matrixWithBlockIndex[[j]], m)])
-            printMatrix(G, "G")
+
     allIndexesMatrix = np.hstack([blockNumber, allIndexesMatrix])
 
     #сортировка матрицы индексов
@@ -77,11 +73,9 @@ def getG(r, m):
                     sumCur = np.sum(allIndexesMatrix[[j]])
                     sumNext = np.sum(allIndexesMatrix[[k]])
                     if (sumNext > sumCur):
-                        G[[j + 1, k + 1]] = G[[k + 1, j + 1]]
                         allIndexesMatrix[[j, k]] = allIndexesMatrix[[k, j]]
                     elif sumNext == sumCur:
                         if allIndexesMatrix[j, allIndexesMatrix.shape[1] - 1] < allIndexesMatrix[k, allIndexesMatrix.shape[1] - 1]:
-                            G[[j + 1, k + 1]] = G[[k + 1, j + 1]]
                             allIndexesMatrix[[j, k]] = allIndexesMatrix[[k, j]]
 
     # формирование двоичных чисел в обратной записи
@@ -110,7 +104,6 @@ def getG(r, m):
                 rowG[0, j] = 1
         answerG = np.vstack([answerG, rowG])
     answerG = np.vstack([np.mat(np.ones([1, 2 ** m]), dtype=int), answerG])
-    printMatrix(answerG, "GDSG")
     return answerG
 
 
@@ -176,6 +169,6 @@ if __name__ == '__main__':
     # print(C(4, 3))
     # print(C(4, 2))
     canonicalRM = CanonicalRMCode(3, 4)
-    print(canonicalRM.G)
+    printMatrix(canonicalRM.G, "G:")
     # print(v)
     print("End")
