@@ -179,9 +179,10 @@ class CanonicalRMCode:
             howManyZeros = howManyZeros + 1
         return howManyZeros, howManyOnes
 
+    # возврашает правильно когда второй блок и первый комплонарные индексы
     def newGetComplanar(self, indexes):
         I = self.I
-        return np.setdiff1d(np.ravel(I), np.ravel(indexes))
+        return np.setdiff1d(np.ravel(I), np.ravel(indexes[0, indexes.shape[1] - indexes[0, 0] : indexes.shape[1]]))
 
     def getComplanar(self, indexes):
         I = self.I
@@ -214,7 +215,7 @@ class CanonicalRMCode:
                     H = self.createH(self.indexesMatrix[k, 1:self.indexesMatrix.shape[1]])
                     # вектор v  со значениями для перемножения w(i) на v для блока
                     # indexComplanar = self.getComplanar(self.indexesMatrix[k, 1:self.indexesMatrix.shape[1]])
-                    indexComplanar = self.newGetComplanar(self.indexesMatrix[k, 1:self.indexesMatrix.shape[1]])
+                    indexComplanar = self.newGetComplanar(self.indexesMatrix[k, 0:self.indexesMatrix.shape[1]])
                     V = self.calculateVH(indexComplanar, H)
                     for t in range(V.shape[0]):
                         howManyZeros, howManyOnes = self.computeScalarMultiply(word, howManyZeros, howManyOnes, V[[t]])
@@ -226,7 +227,7 @@ class CanonicalRMCode:
                             m[0, 0] = 1 if howManyOnes > howManyZeros else 0
                             MMatrix = np.vstack([MMatrix, m])
                             key = 1
-        return MMatrix
+        return MMatrix # блок 2 (первый раз) вернул правильно, блок 1 вернул неправильно по размерам как минимум
 
     def decodeStep3(self, currentW, MMatrix):
         sum = 0
