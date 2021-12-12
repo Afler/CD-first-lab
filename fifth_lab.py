@@ -182,7 +182,7 @@ class CanonicalRMCode:
     # возврашает правильно когда второй блок и первый комплонарные индексы
     def newGetComplanar(self, indexes):
         I = self.I
-        return np.setdiff1d(np.ravel(I), np.ravel(indexes[0, indexes.shape[1] - indexes[0, 0] : indexes.shape[1]]))
+        return np.mat(np.setdiff1d(np.ravel(I), np.ravel(indexes[0, indexes.shape[1] - indexes[0, 0] : indexes.shape[1]])))
 
     def getComplanar(self, indexes):
         I = self.I
@@ -215,18 +215,20 @@ class CanonicalRMCode:
                     H = self.createH(self.indexesMatrix[k, 1:self.indexesMatrix.shape[1]])
                     # вектор v  со значениями для перемножения w(i) на v для блока
                     # indexComplanar = self.getComplanar(self.indexesMatrix[k, 1:self.indexesMatrix.shape[1]])
-                    indexComplanar = self.newGetComplanar(self.indexesMatrix[k, 0:self.indexesMatrix.shape[1]])
+                    indexComplanar = self.newGetComplanar(self.indexesMatrix[k, :])
                     V = self.calculateVH(indexComplanar, H)
                     for t in range(V.shape[0]):
                         howManyZeros, howManyOnes = self.computeScalarMultiply(word, howManyZeros, howManyOnes, V[[t]])
-                        if howManyZeros > 2 ** (self.m - self.r - 1) and howManyOnes > 2 ** (self.m - self.r - 1):
+                        if howManyZeros > 2 ** (self.m - self.r - 1) - 1 and howManyOnes > 2 ** (self.m - self.r - 1) - 1:
                             print("Запрашиваем повторную отправку сообщения")
                             key = 1
-                        if howManyZeros > 2 ** (self.m - i - 1) or howManyOnes > 2 ** (self.m - i - 1):
+                            pass
+                        if howManyZeros > 2 ** (self.m - i - 1) - 1 or howManyOnes > 2 ** (self.m - i - 1) - 1:
                             m = self.indexesMatrix[[k]]
                             m[0, 0] = 1 if howManyOnes > howManyZeros else 0
                             MMatrix = np.vstack([MMatrix, m])
                             key = 1
+                            break
         return MMatrix # блок 2 (первый раз) вернул правильно, блок 1 вернул неправильно по размерам как минимум
 
     def decodeStep3(self, currentW, MMatrix):
@@ -258,8 +260,9 @@ class CanonicalRMCode:
         i = self.r
         WMatrix = np.mat(np.zeros([self.r, word.shape[1]]), dtype=int)
         WMatrix = np.vstack([WMatrix, word])
-        while True:
-            MMatrix = self.decodeStep2(i, word)
+        answer = np.mat(np.zeros([0, 1]), dtype=int)
+        while i != 0:
+            MMatrix = self.decodeStep2(i, WMatrix[[i]])
             if i > 0:
                 WMatrix[[i - 1]] = self.decodeStep3(WMatrix[[i]], MMatrix)
                 # если вес вычисленного w не более
@@ -268,10 +271,9 @@ class CanonicalRMCode:
                     pass
                 else:
                     i = i - 1
-            if i <= 0:
-                break
-        sourceWord = MMatrix[:, 0][::-1]
-        return sourceWord
+                    answer = np.vstack([answer, MMatrix[:, 0][::-1]])
+        answer = np.vstack([answer, 0])
+        return answer
 
 
 if __name__ == '__main__':
