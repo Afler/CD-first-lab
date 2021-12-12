@@ -130,19 +130,6 @@ def fillX(m):
     return answer
 
 
-def С(n, k):
-    if 0 <= k <= n:
-        nn = 1
-        kk = 1
-        for t in range(1, min(k, n - k) + 1):
-            nn *= n
-            kk *= t
-            n -= 1
-        return nn // kk
-    else:
-        return 0
-
-
 class CanonicalRMCode:
     r = 0
     m = 0
@@ -159,7 +146,7 @@ class CanonicalRMCode:
         self.d = 2 ** (self.m - self.r)
         self.I = 0
         for i in range(r + 1):
-            self.k += С(self.n, i)
+            self.k += C(self.n, i)
         self.G, self.indexesMatrix, self.U, self.I = getG(r, m)
 
 
@@ -184,22 +171,6 @@ class CanonicalRMCode:
         I = self.I
         return np.mat(np.setdiff1d(np.ravel(I), np.ravel(indexes[0, indexes.shape[1] - indexes[0, 0] : indexes.shape[1]])))
 
-    def getComplanar(self, indexes):
-        I = self.I
-        indexes = set(np.ravel(indexes))
-        indexes = np.mat(indexes)
-        complanarIndexes = np.zeros([1, I.shape[1] - indexes.shape[1]], dtype=int)
-        place = 0
-        for i in range(I.shape[1]):
-            check = 0
-            for j in range(indexes.shape[1]):
-                if I[0, i] == indexes[0, j]:
-                    check = 1
-            if check == 0:
-                complanarIndexes[0, place] = I[0, i]
-                place = place + 1
-        return complanarIndexes
-
     def decodeStep2(self, i, word):
         MMatrix = np.mat(np.zeros([0, self.indexesMatrix.shape[1]]), dtype=int)
         # по строкам матрицы индексов
@@ -213,22 +184,23 @@ class CanonicalRMCode:
                 while key == 0:
                     # матрица H для блока
                     H = self.createH(self.indexesMatrix[k, 1:self.indexesMatrix.shape[1]])
-                    # вектор v  со значениями для перемножения w(i) на v для блока
+                    # вектор v со значениями для перемножения w(i) на v для блока
                     # indexComplanar = self.getComplanar(self.indexesMatrix[k, 1:self.indexesMatrix.shape[1]])
                     indexComplanar = self.newGetComplanar(self.indexesMatrix[k, :])
                     V = self.calculateVH(indexComplanar, H)
                     for t in range(V.shape[0]):
                         howManyZeros, howManyOnes = self.computeScalarMultiply(word, howManyZeros, howManyOnes, V[[t]])
-                        if howManyZeros > 2 ** (self.m - self.r - 1) - 1 and howManyOnes > 2 ** (self.m - self.r - 1) - 1:
+                        if howManyZeros > 2 ** (self.m - self.r - 1) and howManyOnes > 2 ** (self.m - self.r - 1):
                             print("Запрашиваем повторную отправку сообщения")
                             key = 1
-                            pass
-                        if howManyZeros > 2 ** (self.m - i - 1) - 1 or howManyOnes > 2 ** (self.m - i - 1) - 1:
+                            exit(0)
+                        elif howManyZeros > 2 ** (self.m - i - 1) or howManyOnes > 2 ** (self.m - i - 1):
                             m = self.indexesMatrix[[k]]
                             m[0, 0] = 1 if howManyOnes > howManyZeros else 0
                             MMatrix = np.vstack([MMatrix, m])
                             key = 1
                             break
+
         return MMatrix # блок 2 (первый раз) вернул правильно, блок 1 вернул неправильно по размерам как минимум
 
     def decodeStep3(self, currentW, MMatrix):
