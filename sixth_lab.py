@@ -1,5 +1,6 @@
 import numpy as np
 
+# новая лаба
 
 class CycleCode:
     g = 0
