@@ -33,11 +33,11 @@ class CycleCode:
             G = np.vstack([G, g])
         return G
 
-    def code(self, a):
+    def encode(self, a):
         codeWord = (a @ self.G) % 2
         return codeWord
 
-    def getSyndrome(self, recvPolynom, polynomg):
+    def getSyndromePolynom(self, recvPolynom, polynomg):
         ostatok = (recvPolynom % polynomg)
         for i in range(len(ostatok.coef)):
             ostatok.coef[i] = ostatok.coef[i] % 2
@@ -57,13 +57,12 @@ class CycleCode:
 
     def getIndexWithSyndrome(self, recvWord):
         recvPolynom = polynom(np.ravel(recvWord))
-        polynomg = polynom(np.ravel(self.g))
-        originSyndrome = self.getSyndrome(recvPolynom, polynomg)
-        powerOfOriginSyndrome = self.getSyndromWeight(originSyndrome)
+        gPolynom = polynom(np.ravel(self.g))
+        originSyndromePolynom = self.getSyndromePolynom(recvPolynom, gPolynom)
+        powerOfOriginSyndrome = self.getSyndromWeight(originSyndromePolynom)
         for i in range(1, self.n):
-            newX = (polynom([0, 1]) ** i)
-            shiftedPolynom = originSyndrome * newX
-            syndrome = self.getSyndrome(shiftedPolynom, polynomg)
+            shiftedPolynom = originSyndromePolynom * (polynom([0, 1]) ** i)
+            syndrome = self.getSyndromePolynom(shiftedPolynom, gPolynom)
             if self.getSyndromWeight(syndrome) < powerOfOriginSyndrome:
                 return i, syndrome
         return 0, 0
@@ -77,12 +76,13 @@ if __name__ == '__main__':
     # входное слово
     word = np.mat([[1, 0, 0, 1]], dtype=int)
     # кодируем
-    codedWord = code.code(word)
+    codedWord = code.encode(word)
     printMatrix(codedWord, "codeWord: ")
 
     # вносим однократную ошибку
     e1 = np.mat([[0, 0, 0, 0, 1, 0, 0]])
     recvWord = (codedWord + e1) % 2
+
     # декодируем
     decodedWord = code.decode(recvWord)
     printMatrix(decodedWord, "decodedWord: ")
