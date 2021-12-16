@@ -77,12 +77,28 @@ if __name__ == '__main__':
     word = np.mat([[1, 0, 0, 1]], dtype=int)
     # кодируем
     codedWord = code.encode(word)
-    printMatrix(codedWord, "codeWord: ")
+    printMatrix(codedWord, "encodedWord: ")
 
     # вносим однократную ошибку
     e1 = np.mat([[0, 0, 0, 0, 1, 0, 0]])
     recvWord = (codedWord + e1) % 2
 
     # декодируем
+    decodedWord = code.decode(recvWord)
+    printMatrix(decodedWord, "decodedWord: ")
+
+    code = CycleCode(15, 9, np.mat([[1, 1, 1, 1, 0, 0, 1]], dtype=int))
+    word = np.mat([[1, 0, 0, 1,
+                    0, 0, 0, 1,
+                    1]], dtype=int)
+    codedWord = code.encode(word)
+    printMatrix(codedWord, "encodedWord: ")
+
+    e1 = np.mat([[0, 0, 0, 0,
+                  0, 0, 0, 0,
+                  1, 0, 1, 0,
+                  0, 0, 0]])
+    recvWord = (codedWord + e1) % 2
+
     decodedWord = code.decode(recvWord)
     printMatrix(decodedWord, "decodedWord: ")
