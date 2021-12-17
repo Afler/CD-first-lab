@@ -25,16 +25,12 @@ class CycleCode:
         self.t = self.getT()
 
     def getG(self):
-        for i in range(self.g.shape[1], self.n):
-            self.g = np.hstack([self.g, np.zeros([1, 1], dtype=int)])
-        G = np.mat(np.zeros([0, self.g.shape[1]]), dtype=int)
-        G = np.vstack([G, self.g])
-        g = self.g
-        # g = np.ravel(self.g).copy()
-        # g.resize(self.n + 1,refcheck=False)
-        for i in range(self.k - 1):
-            g = np.roll(g, 1, 1)
+        g = np.ravel(self.g).copy()
+        g.resize(self.n, refcheck=False)
+        G = np.mat(np.zeros([0, self.n]), dtype=int)
+        for i in range(self.k):
             G = np.vstack([G, g])
+            g = np.roll(g, 1, 0)
         return G
 
     def getT(self):
