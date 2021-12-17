@@ -67,12 +67,12 @@ class CycleCode:
     def getIndexWithSyndromePolynom(self, recvWord):
         recvPolynom = polynom(np.ravel(recvWord))
         gPolynom = polynom(np.ravel(self.g))
-        syndromePolynom = self.getSyndromePolynom(recvPolynom, gPolynom)
+        originSyndromePolynom = self.getSyndromePolynom(recvPolynom, gPolynom)
         for i in range(self.n):
+            shiftedPolynom = originSyndromePolynom * (polynom([0, 1]) ** i)
+            syndromePolynom = self.getSyndromePolynom(shiftedPolynom, gPolynom)
             if self.getPolynomWeight(syndromePolynom) <= self.t:
                 return i, syndromePolynom
-            shiftedPolynom = syndromePolynom * (polynom([0, 1]))
-            syndromePolynom = self.getSyndromePolynom(shiftedPolynom, gPolynom)
         return 0, 0
 
 
@@ -88,7 +88,7 @@ if __name__ == '__main__':
     printMatrix(codedWord, "encodedWord: ")
 
     # вносим однократную ошибку
-    e1 = np.mat([[1, 0, 0, 0, 1, 0, 0]])
+    e1 = np.mat([[1, 0, 0, 0, 0, 1, 0]])
     recvWord = (codedWord + e1) % 2
 
     # декодируем
