@@ -10,28 +10,40 @@ def printMatrix(arr, name):
 class CycleCode:
     g = 0
     n = 0
-    maxPowerPolynom = 0
-    dimension = 0
+    gPower = 0
+    k = 0
     G = 0
+    t = -1
+    d = -1
 
-    def __init__(self, n, dimension, vector_g):
+    def __init__(self, n, k, vector_g):
         self.n = n
-        self.dimension = dimension
+        self.k = k
         self.g = vector_g
-        self.maxPowerPolynom = n - dimension
+        self.gPower = n - k
         self.G = self.getG()
+        self.t = self.getT()
 
     def getG(self):
-
         for i in range(self.g.shape[1], self.n):
             self.g = np.hstack([self.g, np.zeros([1, 1], dtype=int)])
         G = np.mat(np.zeros([0, self.g.shape[1]]), dtype=int)
         G = np.vstack([G, self.g])
         g = self.g
-        for i in range(self.dimension - 1):
+        # g = np.ravel(self.g).copy()
+        # g.resize(self.n + 1,refcheck=False)
+        for i in range(self.k - 1):
             g = np.roll(g, 1, 1)
             G = np.vstack([G, g])
         return G
+
+    def getT(self):
+        self.d = self.G.shape[1]
+        # определение минимального кодового расстояния
+        for i in range(self.G.shape[0]):
+            for j in range(i + 1, self.G.shape[0]):
+                self.d = min(np.count_nonzero((self.G[j] - self.G[i]) % 2), self.d)
+        return (self.d - 1) // 2
 
     def encode(self, a):
         codeWord = (a @ self.G) % 2
@@ -59,11 +71,10 @@ class CycleCode:
         recvPolynom = polynom(np.ravel(recvWord))
         gPolynom = polynom(np.ravel(self.g))
         originSyndromePolynom = self.getSyndromePolynom(recvPolynom, gPolynom)
-        powerOfOriginSyndrome = self.getSyndromWeight(originSyndromePolynom)
         for i in range(1, self.n):
             shiftedPolynom = originSyndromePolynom * (polynom([0, 1]) ** i)
             syndrome = self.getSyndromePolynom(shiftedPolynom, gPolynom)
-            if self.getSyndromWeight(syndrome) < powerOfOriginSyndrome:
+            if self.getSyndromWeight(syndrome) <= self.t:
                 return i, syndrome
         return 0, 0
 
