@@ -52,11 +52,11 @@ class CycleCode:
             ostatok.coef[i] = ostatok.coef[i] % 2
         return ostatok
 
-    def getSyndromWeight(self, syndrome):
+    def getPolynomWeight(self, syndrome):
         return np.count_nonzero(syndrome.coef)
 
     def decode(self, recvWord):
-        i, syndrome = self.getIndexWithSyndrome(recvWord)
+        i, syndrome = self.getIndexWithSyndromePolynom(recvWord)
         if i == 0 and syndrome == 0:
             print("Неисправимая ошибка")
             exit(0)
@@ -64,21 +64,21 @@ class CycleCode:
         answer = np.mat((error + polynom(np.ravel(recvWord))).coef % 2, dtype=int)
         return answer
 
-    def getIndexWithSyndrome(self, recvWord):
+    def getIndexWithSyndromePolynom(self, recvWord):
         recvPolynom = polynom(np.ravel(recvWord))
         gPolynom = polynom(np.ravel(self.g))
-        originSyndromePolynom = self.getSyndromePolynom(recvPolynom, gPolynom)
-        for i in range(1, self.n):
-            shiftedPolynom = originSyndromePolynom * (polynom([0, 1]) ** i)
-            syndrome = self.getSyndromePolynom(shiftedPolynom, gPolynom)
-            if self.getSyndromWeight(syndrome) <= self.t:
-                return i, syndrome
+        syndromePolynom = self.getSyndromePolynom(recvPolynom, gPolynom)
+        for i in range(self.n):
+            if self.getPolynomWeight(syndromePolynom) <= self.t:
+                return i, syndromePolynom
+            shiftedPolynom = syndromePolynom * (polynom([0, 1]))
+            syndromePolynom = self.getSyndromePolynom(shiftedPolynom, gPolynom)
         return 0, 0
 
 
 if __name__ == '__main__':
     # порождающий полином
-    genPolynom = np.mat([[1, 1, 0, 1]], dtype=int)
+    genPolynom = np.mat([[1, 0, 1, 1]], dtype=int)
     code = CycleCode(7, 4, genPolynom)
 
     # входное слово
@@ -88,25 +88,25 @@ if __name__ == '__main__':
     printMatrix(codedWord, "encodedWord: ")
 
     # вносим однократную ошибку
-    e1 = np.mat([[0, 0, 0, 0, 1, 0, 0]])
+    e1 = np.mat([[1, 0, 0, 0, 1, 0, 0]])
     recvWord = (codedWord + e1) % 2
 
     # декодируем
     decodedWord = code.decode(recvWord)
     printMatrix(decodedWord, "decodedWord: ")
 
-    code = CycleCode(15, 9, np.mat([[1, 1, 1, 1, 0, 0, 1]], dtype=int))
-    word = np.mat([[1, 0, 0, 1,
-                    0, 0, 0, 1,
-                    1]], dtype=int)
-    codedWord = code.encode(word)
-    printMatrix(codedWord, "encodedWord: ")
-
-    e1 = np.mat([[0, 0, 0, 0,
-                  0, 0, 0, 0,
-                  1, 0, 1, 0,
-                  0, 0, 0]])
-    recvWord = (codedWord + e1) % 2
-
-    decodedWord = code.decode(recvWord)
-    printMatrix(decodedWord, "decodedWord: ")
+    # code = CycleCode(15, 9, np.mat([[1, 1, 1, 1, 0, 0, 1]], dtype=int))
+    # word = np.mat([[1, 0, 0, 1,
+    #                 0, 0, 0, 1,
+    #                 1]], dtype=int)
+    # codedWord = code.encode(word)
+    # printMatrix(codedWord, "encodedWord: ")
+    #
+    # e1 = np.mat([[0, 0, 0, 0,
+    #               0, 0, 0, 0,
+    #               1, 0, 1, 0,
+    #               0, 0, 0]])
+    # recvWord = (codedWord + e1) % 2
+    #
+    # decodedWord = code.decode(recvWord)
+    # printMatrix(decodedWord, "decodedWord: ")
