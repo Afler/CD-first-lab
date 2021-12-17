@@ -1,5 +1,6 @@
 import numpy as np
 from numpy.polynomial import Polynomial as polynom
+import math
 
 
 def printMatrix(arr, name):
@@ -38,8 +39,8 @@ class CycleCode:
         # определение минимального кодового расстояния
         for i in range(self.G.shape[0]):
             for j in range(i + 1, self.G.shape[0]):
-                self.d = min(np.count_nonzero((self.G[j] - self.G[i]) % 2), self.d)
-        return (self.d - 1) // 2
+                self.d = min(np.count_nonzero((self.G[[j]] - self.G[[i]]) % 2), self.d)
+        return math.floor((self.d - 1) / 2)
 
     def encode(self, a):
         codeWord = (a @ self.G) % 2

@@ -71,7 +71,7 @@ class LinearCode:
         self.allowed_words = np.vstack([self.allowed_words, np.zeros(self.allowed_words.shape[1], dtype=int)])
         for i in range(self.G.shape[0] - 1):
             for j in range(i + 1, self.G.shape[0]):
-                row = (self.G[i] + self.G[j]) % 2
+                row = (self.G[[i]] + self.G[[j]]) % 2
                 isAppend = True
                 for k in range(0, self.allowed_words.shape[0]):
                     if np.array_equal(self.allowed_words[k], row):
